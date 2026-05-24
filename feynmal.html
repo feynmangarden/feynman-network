@@ -1,0 +1,621 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>费曼知识网络 · 知识花园</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0f0f0f;
+      color: #e0e0e0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    /* 深色极简风格，致敬 DeepSeek 审美 */
+    header {
+      background: #1a1a1a;
+      border-bottom: 1px solid #2a2a2a;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-weight: 600;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: #f0f0f0;
+    }
+    .logo span {
+      color: #8ab4f8;
+    }
+    nav {
+      display: flex;
+      gap: 24px;
+    }
+    nav button {
+      background: transparent;
+      border: none;
+      color: #aaa;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 6px 0;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    nav button.active {
+      color: #fff;
+      border-bottom-color: #8ab4f8;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    /* 通用面板样式 */
+    .panel {
+      background: #121212;
+      overflow-y: auto;
+      padding: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: #3a3a3a #1a1a1a;
+    }
+    .panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .panel::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+    .panel::-webkit-scrollbar-thumb {
+      background: #3a3a3a;
+      border-radius: 4px;
+    }
+    /* 知识花园主页 */
+    .garden-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+    .garden-card {
+      background: #1e1e1e;
+      border: 1px solid #2c2c2c;
+      border-radius: 16px;
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .garden-card:hover {
+      border-color: #8ab4f8;
+      background: #232323;
+      transform: translateY(-2px);
+    }
+    .card-perspective {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8ab4f8;
+      margin-bottom: 12px;
+    }
+    .card-statement {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #f5f5f5;
+      line-height: 1.4;
+    }
+    /* 概念编辑器 & 列表 */
+    .concept-editor, .relation-editor {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    input, textarea, select {
+      width: 100%;
+      background: #0f0f0f;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: #8ab4f8;
+    }
+    .btn {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #ddd;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      margin-right: 8px;
+    }
+    .btn-primary {
+      background: #8ab4f8;
+      border-color: #8ab4f8;
+      color: #0f0f0f;
+      font-weight: 500;
+    }
+    .btn-primary:hover {
+      background: #9ec5ff;
+    }
+    .btn:hover {
+      background: #333;
+      border-color: #555;
+    }
+    .concept-list-item {
+      background: #1a1a1a;
+      border: 1px solid #2c2c2c;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .concept-list-item:hover {
+      border-color: #555;
+    }
+    .neighbor-item {
+      background: #1a1a1a;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 6px 0;
+      border-left: 4px solid #8ab4f8;
+    }
+    .flex-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .divider {
+      border-color: #2a2a2a;
+      margin: 20px 0;
+    }
+    .symbol-btn {
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      color: #ccc;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin: 0 4px 4px 0;
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+    .hidden {
+      display: none !important;
+    }
+    #homeView, #editorView, #readingView {
+      width: 100%;
+    }
+    .split-view {
+      display: flex;
+      gap: 0;
+      height: 100%;
+    }
+    .split-left, .split-right {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .split-left {
+      background: #0f0f0f;
+      border-right: 1px solid #2a2a2a;
+    }
+    .resizer {
+      width: 4px;
+      background: #2a2a2a;
+      cursor: col-resize;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">⚡ 费曼<span>知识网络</span></div>
+  <nav>
+    <button id="navHome" class="active">🏡 知识花园</button>
+    <button id="navEditor">✍️ 编辑概念</button>
+    <button id="navRead">📖 对比阅读</button>
+  </nav>
+  <div>
+    <span style="color:#8ab4f8; margin-right: 12px;">一句话说清楚奖</span>
+  </div>
+</header>
+
+<main>
+  <!-- 主页：知识花园 -->
+  <div id="homeView" class="panel">
+    <h2 style="margin-bottom: 12px; font-weight: 400;">你的知识花园</h2>
+    <p style="color: #999; margin-bottom: 20px;">每个概念必须能用一句话说清楚。从封面卡片进入你的知识网。</p>
+    <div id="gardenContainer" class="garden-grid">
+      <!-- 动态渲染封面卡片 -->
+    </div>
+    <div id="emptyGarden" style="color:#666; margin-top:40px; text-align:center;">还没有封面概念，去编辑区创建吧。</div>
+  </div>
+
+  <!-- 编辑视图：概念卡片 + 关系 -->
+  <div id="editorView" class="panel hidden" style="display:flex; gap:20px; flex-wrap:wrap;">
+    <div style="flex: 1; min-width: 280px;">
+      <div class="concept-editor">
+        <h3>✨ 创建概念卡片</h3>
+        <input type="text" id="perspectiveInput" placeholder="视角 (例: 几何变换视角)">
+        <input type="text" id="statementInput" placeholder="一句话说明 (必填)">
+        <input type="text" id="sourceInput" placeholder="原书引用 (可选)">
+        <button class="btn btn-primary" id="addConceptBtn">添加概念</button>
+      </div>
+      <div class="relation-editor">
+        <h3>🔗 添加关系</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin:8px 0;">
+          <span class="symbol-btn" data-symbol="⊆">⊆ 包含于</span>
+          <span class="symbol-btn" data-symbol="→">→ 推导</span>
+          <span class="symbol-btn" data-symbol="⇔">⇔ 等价</span>
+          <span class="symbol-btn" data-symbol="∩">∩ 交</span>
+          <span class="symbol-btn" data-symbol="∈">∈ 属于</span>
+        </div>
+        <select id="relationTypeSelect">
+          <option value="subset">⊆ 包含于</option>
+          <option value="derive">→ 推导</option>
+          <option value="equivalent">⇔ 等价</option>
+          <option value="custom">自定义符号</option>
+        </select>
+        <input type="text" id="customSymbolInput" placeholder="自定义符号" style="display:none;">
+        <input type="text" id="fromConceptId" placeholder="概念A ID">
+        <input type="text" id="toConceptId" placeholder="概念B ID">
+        <button class="btn" id="addRelationBtn">建立关系</button>
+      </div>
+    </div>
+    <div style="flex: 1; min-width: 280px;">
+      <h3>📋 概念列表</h3>
+      <div id="conceptListContainer"></div>
+      <h3 style="margin-top:20px;">🕸️ 邻居视图 (点击概念查看)</h3>
+      <div id="neighborViewContainer"></div>
+    </div>
+  </div>
+
+  <!-- 对比阅读视图 (分栏) -->
+  <div id="readingView" class="panel hidden" style="padding:0;">
+    <div class="split-view" style="height:100%;">
+      <div class="split-left" id="leftPane">
+        <h3>📄 原文 / 资料</h3>
+        <textarea id="sourceTextArea" placeholder="在此粘贴文本、笔记或引用..." style="height:80%; background:#0f0f0f; color:#ddd; border:1px solid #333; padding:12px;"></textarea>
+        <button class="btn" id="extractConceptBtn" style="margin-top:8px;">选中文字 → 右键转换为概念 (模拟)</button>
+      </div>
+      <div class="resizer" id="resizer"></div>
+      <div class="split-right" id="rightPane">
+        <h3>🧠 你的重建</h3>
+        <div id="rightConceptList" style="margin-top:12px;"></div>
+        <p style="color:#666; margin-top:20px;">从左侧提取概念，用自己的话重写。</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  (function() {
+    // ---------- 存储 ----------
+    const STORAGE_CONCEPTS = 'feynman_concepts';
+    const STORAGE_RELATIONS = 'feynman_relations';
+
+    function loadConcepts() {
+      const raw = localStorage.getItem(STORAGE_CONCEPTS);
+      return raw ? JSON.parse(raw) : [];
+    }
+    function saveConcepts(concepts) {
+      localStorage.setItem(STORAGE_CONCEPTS, JSON.stringify(concepts));
+    }
+    function loadRelations() {
+      const raw = localStorage.getItem(STORAGE_RELATIONS);
+      return raw ? JSON.parse(raw) : [];
+    }
+    function saveRelations(relations) {
+      localStorage.setItem(STORAGE_RELATIONS, JSON.stringify(relations));
+    }
+
+    // 全局状态
+    let concepts = loadConcepts();
+    let relations = loadRelations();
+
+    // ---------- UI 切换 ----------
+    const homeView = document.getElementById('homeView');
+    const editorView = document.getElementById('editorView');
+    const readingView = document.getElementById('readingView');
+    const navHome = document.getElementById('navHome');
+    const navEditor = document.getElementById('navEditor');
+    const navRead = document.getElementById('navRead');
+
+    function setActiveNav(activeBtn) {
+      [navHome, navEditor, navRead].forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+    }
+
+    navHome.addEventListener('click', ()=>{
+      homeView.classList.remove('hidden');
+      editorView.classList.add('hidden');
+      readingView.classList.add('hidden');
+      setActiveNav(navHome);
+      renderGarden();
+    });
+    navEditor.addEventListener('click', ()=>{
+      homeView.classList.add('hidden');
+      editorView.classList.remove('hidden');
+      readingView.classList.add('hidden');
+      setActiveNav(navEditor);
+      renderConceptList();
+      clearNeighbors();
+    });
+    navRead.addEventListener('click', ()=>{
+      homeView.classList.add('hidden');
+      editorView.classList.add('hidden');
+      readingView.classList.remove('hidden');
+      setActiveNav(navRead);
+      renderRightConcepts();
+    });
+
+    // ---------- 知识花园 ----------
+    function renderGarden() {
+      const container = document.getElementById('gardenContainer');
+      const emptyMsg = document.getElementById('emptyGarden');
+      if (!concepts.length) {
+        container.innerHTML = '';
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+      // 取前几个作为封面卡片，或标记为封面 (简化：所有概念都可作为入口)
+      container.innerHTML = concepts.map(c => `
+        <div class="garden-card" data-id="${c.id}">
+          <div class="card-perspective">${escapeHtml(c.perspective || '无视角')}</div>
+          <div class="card-statement">${escapeHtml(c.statement)}</div>
+          <div style="margin-top:12px; font-size:0.8rem; color:#888;">ID: ${c.id.substring(0,8)}...</div>
+        </div>
+      `).join('');
+      // 点击卡片进入编辑视图并定位？
+      document.querySelectorAll('.garden-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          const id = card.dataset.id;
+          // 切换到编辑视图并高亮概念
+          navEditor.click();
+          setTimeout(() => {
+            highlightConceptInList(id);
+            showNeighbors(id);
+          }, 50);
+        });
+      });
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        if (m === '"') return '&quot;';
+        return m;
+      });
+    }
+
+    // ---------- 概念列表与编辑 ----------
+    function renderConceptList() {
+      const container = document.getElementById('conceptListContainer');
+      if (!concepts.length) {
+        container.innerHTML = '<p style="color:#666;">暂无概念，创建一个吧。</p>';
+        return;
+      }
+      container.innerHTML = concepts.map(c => `
+        <div class="concept-list-item" data-id="${c.id}">
+          <div>
+            <strong>${escapeHtml(c.statement)}</strong>
+            <div style="font-size:0.8rem; color:#8ab4f8;">${escapeHtml(c.perspective || '')}</div>
+          </div>
+          <div>
+            <button class="btn delete-concept" data-id="${c.id}" style="padding:4px 10px;">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.concept-list-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.classList.contains('delete-concept')) return;
+          const id = item.dataset.id;
+          showNeighbors(id);
+        });
+      });
+      document.querySelectorAll('.delete-concept').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          deleteConcept(id);
+        });
+      });
+    }
+
+    function highlightConceptInList(id) {
+      document.querySelectorAll('.concept-list-item').forEach(el => el.style.background = '#1a1a1a');
+      const target = document.querySelector(`.concept-list-item[data-id="${id}"]`);
+      if (target) target.style.background = '#2a3a4a';
+    }
+
+    function showNeighbors(conceptId) {
+      const concept = concepts.find(c => c.id === conceptId);
+      if (!concept) return;
+      const relatedRelations = relations.filter(r => r.fromId === conceptId || r.toId === conceptId);
+      const neighborIds = new Set();
+      relatedRelations.forEach(r => {
+        if (r.fromId !== conceptId) neighborIds.add(r.fromId);
+        if (r.toId !== conceptId) neighborIds.add(r.toId);
+      });
+      const neighbors = concepts.filter(c => neighborIds.has(c.id));
+      const container = document.getElementById('neighborViewContainer');
+      let html = `<h4>邻居: ${escapeHtml(concept.statement)}</h4>`;
+      if (!neighbors.length) {
+        html += '<p style="color:#666;">暂无关联概念</p>';
+      } else {
+        neighbors.forEach(n => {
+          const rel = relatedRelations.find(r => (r.fromId === conceptId && r.toId === n.id) || (r.toId === conceptId && r.fromId === n.id));
+          const symbol = rel ? (rel.type === 'custom' ? rel.customSymbol : rel.type) : '?';
+          html += `<div class="neighbor-item">${escapeHtml(symbol)} ${escapeHtml(n.statement)} (${escapeHtml(n.perspective || '')})</div>`;
+        });
+      }
+      container.innerHTML = html;
+    }
+
+    function clearNeighbors() {
+      document.getElementById('neighborViewContainer').innerHTML = '';
+    }
+
+    document.getElementById('addConceptBtn').addEventListener('click', () => {
+      const perspective = document.getElementById('perspectiveInput').value.trim();
+      const statement = document.getElementById('statementInput').value.trim();
+      if (!statement) {
+        alert('一句话说明不能为空');
+        return;
+      }
+      const source = document.getElementById('sourceInput').value.trim();
+      const newConcept = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36),
+        perspective,
+        statement,
+        source: source || undefined,
+        createdAt: Date.now()
+      };
+      concepts.push(newConcept);
+      saveConcepts(concepts);
+      document.getElementById('perspectiveInput').value = '';
+      document.getElementById('statementInput').value = '';
+      document.getElementById('sourceInput').value = '';
+      renderConceptList();
+      renderGarden();
+    });
+
+    function deleteConcept(id) {
+      concepts = concepts.filter(c => c.id !== id);
+      relations = relations.filter(r => r.fromId !== id && r.toId !== id);
+      saveConcepts(concepts);
+      saveRelations(relations);
+      renderConceptList();
+      renderGarden();
+      clearNeighbors();
+    }
+
+    // 关系符号快捷输入
+    document.querySelectorAll('.symbol-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sym = btn.dataset.symbol;
+        document.getElementById('relationTypeSelect').value = 'custom';
+        document.getElementById('customSymbolInput').style.display = 'block';
+        document.getElementById('customSymbolInput').value = sym;
+      });
+    });
+    document.getElementById('relationTypeSelect').addEventListener('change', (e) => {
+      const customInput = document.getElementById('customSymbolInput');
+      if (e.target.value === 'custom') {
+        customInput.style.display = 'block';
+      } else {
+        customInput.style.display = 'none';
+        customInput.value = '';
+      }
+    });
+
+    document.getElementById('addRelationBtn').addEventListener('click', () => {
+      const fromId = document.getElementById('fromConceptId').value.trim();
+      const toId = document.getElementById('toConceptId').value.trim();
+      if (!fromId || !toId) return alert('请输入概念ID');
+      if (!concepts.find(c => c.id === fromId) || !concepts.find(c => c.id === toId)) {
+        return alert('概念ID不存在');
+      }
+      let type = document.getElementById('relationTypeSelect').value;
+      let customSymbol = undefined;
+      if (type === 'custom') {
+        customSymbol = document.getElementById('customSymbolInput').value.trim();
+        if (!customSymbol) return alert('请输入自定义符号');
+      }
+      const newRel = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36),
+        fromId,
+        toId,
+        type: type === 'custom' ? 'custom' : type,
+        customSymbol: customSymbol || undefined,
+        createdAt: Date.now()
+      };
+      relations.push(newRel);
+      saveRelations(relations);
+      document.getElementById('fromConceptId').value = '';
+      document.getElementById('toConceptId').value = '';
+      renderConceptList();
+      clearNeighbors();
+    });
+
+    // ---------- 对比阅读 ----------
+    function renderRightConcepts() {
+      const container = document.getElementById('rightConceptList');
+      if (!concepts.length) {
+        container.innerHTML = '<p style="color:#666;">还没有概念</p>';
+        return;
+      }
+      container.innerHTML = concepts.map(c => `<div class="neighbor-item">${escapeHtml(c.statement)}</div>`).join('');
+    }
+    document.getElementById('extractConceptBtn').addEventListener('click', () => {
+      const selection = window.getSelection().toString().trim();
+      if (!selection) {
+        alert('请先在左侧选中文字');
+        return;
+      }
+      document.getElementById('perspectiveInput').value = '原文提取';
+      document.getElementById('statementInput').value = selection;
+      navEditor.click();
+    });
+
+    // 简易分栏拖拽
+    const resizer = document.getElementById('resizer');
+    const leftPane = document.getElementById('leftPane');
+    const rightPane = document.getElementById('rightPane');
+    let isResizing = false;
+    resizer.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      document.body.style.cursor = 'col-resize';
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const mainRect = document.querySelector('main').getBoundingClientRect();
+      const offsetX = e.clientX - mainRect.left;
+      if (offsetX > 100 && offsetX < mainRect.width - 100) {
+        leftPane.style.flex = 'none';
+        leftPane.style.width = offsetX + 'px';
+        rightPane.style.flex = '1';
+      }
+    });
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.style.cursor = 'default';
+      }
+    });
+
+    // 初始化渲染
+    renderGarden();
+    renderConceptList();
+  })();
+</script>
+</body>
+</html>
+```
